@@ -1,0 +1,3 @@
+import { Photo } from './UI';
+import { date, time, money } from '../utils/format';
+export default function AttractionCard({ attraction }) { return <article className="card attraction-card"><Photo src={attraction.image} alt={attraction.name} className="attraction-photo"/><div><small className="eyebrow">{attraction.city}</small><h3>{attraction.name}</h3><p>{date(attraction.start_local)} · {time(attraction.start_local)} – {time(attraction.end_local)}</p><div className="spread"><small>{attraction.visit_minutes} minute visit</small><strong>{money(attraction.total)}</strong></div></div></article>; }

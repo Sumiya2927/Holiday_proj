@@ -1,18 +1,9 @@
-
-# Dependencies
 node_modules/
-**/node_modules/
-
-# Environment variables
 .env
-**/.env
-
-# Build files
+.env.*
+!.env.example
 dist/
-build/
-
-# Logs
+coverage/
 *.log
-
-# System files
-.DS_Store
+.vscode/
+hackathon-problem-1-holiday-package/

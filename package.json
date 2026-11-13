@@ -1,11 +1,29 @@
 {
+  "name": "holiday-package-database",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
+    "mongodb": "^6.0.0",
     "mongoose": "^9.12.1"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
+  "scripts": {
+    "dev": "npm run dev --workspace client",
+    "build": "npm run build --workspace client",
+    "test": "npm run test --workspace client",
+    "db:import:python": "node --env-file-if-exists=.env scripts/import-catalog.mjs --python",
+    "db:verify:python": "node --env-file-if-exists=.env scripts/import-catalog.mjs --python --verify",
+    "db:validate": "node --env-file-if-exists=.env scripts/import-catalog.mjs --dry-run",
+    "db:import": "node --env-file-if-exists=.env scripts/import-catalog.mjs",
+    "db:verify": "node --env-file-if-exists=.env scripts/import-catalog.mjs --verify"
   }
 }
