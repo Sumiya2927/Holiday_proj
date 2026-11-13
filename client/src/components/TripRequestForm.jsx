@@ -1,15 +1,13 @@
-import { useState, useId } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   Info,
   Minus,
   Plus,
-  Sparkles,
   RotateCcw,
   CheckCircle2,
   Check,
   Plane,
-  MapPin,
   Calendar,
   Users,
   Coins,
@@ -45,28 +43,26 @@ const CATALOG_COUNTRIES = [
     name: 'Japan',
     flag: '🇯🇵',
     cities: 'Tokyo · Kyoto · Osaka',
-    highlights: 'Temples, Cherry Blossoms & Bullet Trains',
-    accent: '#ef4444',
+    highlights: 'Culture, scenic rail & historic heritage',
   },
   {
     code: 'AE',
     name: 'United Arab Emirates',
     flag: '🇦🇪',
     cities: 'Dubai · Abu Dhabi',
-    highlights: 'Skylines, Desert Safaris & Modern Luxury',
-    accent: '#f59e0b',
+    highlights: 'Modern skylines, desert adventures & coastlines',
   },
 ];
 
 const QUICK_BUDGET_PRESETS = [
   { amount: 250000, label: '₹2.5L', tag: 'Economy' },
-  { amount: 350000, label: '₹3.5L', tag: 'Menon Target' },
+  { amount: 350000, label: '₹3.5L', tag: 'Standard' },
   { amount: 450000, label: '₹4.5L', tag: 'Comfort' },
   { amount: 600000, label: '₹6.0L', tag: 'Luxury' },
 ];
 
 const QUICK_DATE_PRESETS = [
-  { date: '2027-04-10', label: '10 Apr (Menon Demo)' },
+  { date: '2027-04-10', label: '10 Apr' },
   { date: '2027-04-01', label: '1 Apr (Earliest)' },
   { date: '2027-04-05', label: '5 Apr' },
   { date: '2027-04-12', label: '12 Apr' },
@@ -193,23 +189,6 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
     setTimeout(() => setQuickParsed(false), 4000);
   }
 
-  function loadMenonDemo() {
-    const demo = {
-      departure_airport: 'BLR',
-      country: 'JP',
-      start_date: '2027-04-10',
-      nights: 6,
-      adults: 2,
-      children_ages: [6],
-      budget: '350000',
-    };
-    setForm(demo);
-    setErrors({});
-    try {
-      sessionStorage.setItem('holiday-request', JSON.stringify(demo));
-    } catch {}
-  }
-
   function resetForm() {
     const empty = {
       departure_airport: '',
@@ -243,7 +222,7 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
     }
   };
 
-  // Duolingo-style progress calculation
+  // Progress calculation
   const filledCount = [
     Boolean(form.departure_airport),
     Boolean(form.country),
@@ -264,104 +243,91 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
   const availableCountries = options?.countries?.length
     ? options.countries.map(c => {
         const match = CATALOG_COUNTRIES.find(k => k.code === c.code);
-        return match || { code: c.code, name: c.name, flag: '🌍', cities: '', highlights: '', accent: '#087f8c' };
+        return match || { code: c.code, name: c.name, flag: '🌍', cities: '', highlights: '' };
       })
     : CATALOG_COUNTRIES;
 
   return (
     <form className="card trip-form" onSubmit={submit} noValidate style={{ overflow: 'hidden' }}>
-      {/* Duolingo Gamified Progress Header */}
+      {/* Minimalist Progress Header */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #f0fdf4 0%, #e6f6f7 100%)',
-          border: '1px solid #ccece6',
-          borderRadius: '14px',
-          padding: '16px 20px',
-          marginBottom: '26px',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '14px 18px',
+          marginBottom: '24px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>🎯</span>
-            <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--navy)' }}>
-              Step 1 of 1: Configure Your Holiday
-            </span>
-          </div>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--teal)' }}>
-            {progressPercent}% Complete
+          <span style={{ fontWeight: '600', fontSize: '13px', color: 'var(--navy)' }}>
+            Holiday Configuration
+          </span>
+          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--teal)' }}>
+            {progressPercent}% completed
           </span>
         </div>
-        <div style={{ height: '8px', background: '#dceee9', borderRadius: '99px', overflow: 'hidden' }}>
+        <div style={{ height: '4px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
           <div
             style={{
               height: '100%',
               width: `${progressPercent}%`,
-              background: 'linear-gradient(90deg, #087f8c, #16a34a)',
-              borderRadius: '99px',
-              transition: 'width 0.4s ease',
+              background: 'var(--teal)',
+              borderRadius: '4px',
+              transition: 'width 0.3s ease',
             }}
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
           <small style={{ color: 'var(--muted)', fontSize: '11px' }}>
             {progressPercent === 100
-              ? '✨ Everything ready! Click Generate below to explore your package.'
-              : '👉 Tap the interactive cards below to pick your trip details.'}
+              ? 'All requirements configured. Ready to build your package.'
+              : 'Select your preferred departure, destination and travel dates.'}
           </small>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ minHeight: '32px', fontSize: '11px', padding: '4px 10px', borderRadius: '8px' }}
-              onClick={loadMenonDemo}
-            >
-              <Sparkles size={12} style={{ color: 'var(--teal)' }} /> Fill Menon Demo
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ minHeight: '32px', fontSize: '11px', padding: '4px 10px', borderRadius: '8px' }}
-              onClick={resetForm}
-              title="Reset to empty form"
-            >
-              <RotateCcw size={12} /> Reset
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ minHeight: '28px', fontSize: '11px', padding: '3px 10px', borderRadius: '6px' }}
+            onClick={resetForm}
+            title="Reset to empty form"
+          >
+            <RotateCcw size={12} /> Reset
+          </button>
         </div>
       </div>
 
-      {/* Stretch S1: Quick Request Assistant (Natural Language Rule-based) */}
+      {/* Quick Request Assistant (Natural Language Rule-based) */}
       <div
         style={{
           background: '#ffffff',
-          border: '2px dashed #bce3e6',
-          borderRadius: '12px',
-          padding: '14px 18px',
-          marginBottom: '26px',
+          border: '1px solid #e2e8f0',
+          borderRadius: '10px',
+          padding: '12px 16px',
+          marginBottom: '24px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--teal)' }}>
-            ⚡ Quick Request Assistant (Type in plain English)
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--teal)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Quick Request Assistant
           </span>
           {quickParsed && (
             <span style={{ fontSize: '11px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={13} /> Parsed & Populated!
+              <CheckCircle2 size={12} /> Applied
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
-            placeholder="e.g. Menon family: 2 adults, 1 child aged 6 from Bengaluru to Japan for 6 nights on 10 April budget 3.5 lakhs"
+            placeholder="e.g. 2 adults, 1 child aged 6 from Bengaluru to Japan for 6 nights starting 10 April with ₹3,50,000 budget"
             value={quickText}
             onChange={e => setQuickText(e.target.value)}
-            style={{ minHeight: '40px', fontSize: '12px' }}
+            style={{ minHeight: '38px', fontSize: '12px' }}
           />
           <button
             type="button"
-            className="duo-pill selected"
-            style={{ minHeight: '40px', whiteSpace: 'nowrap', paddingInline: '16px' }}
+            className="btn-secondary"
+            style={{ minHeight: '38px', whiteSpace: 'nowrap', paddingInline: '14px', fontSize: '12px' }}
             onClick={applyQuickRequest}
           >
             Auto-fill
@@ -369,16 +335,16 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         </div>
       </div>
 
-      {/* SECTION 1: Destination Country (Duolingo-style Chunky Interactive Cards) */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Compass size={16} style={{ color: 'var(--teal)' }} /> Where would you love to go?
+      {/* SECTION 1: Destination Country (Minimalist Interactive Cards) */}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Compass size={15} style={{ color: 'var(--teal)' }} /> Destination Country
           </label>
-          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Select destination country</span>
+          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Select destination</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
           {availableCountries.map(c => {
             const isSelected = form.country === c.code;
             return (
@@ -389,18 +355,17 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
                 onClick={() => update('country', c.code)}
                 onKeyDown={e => e.key === 'Enter' && update('country', c.code)}
                 className={`duo-card ${isSelected ? 'selected' : ''}`}
-                style={{ padding: '16px 18px' }}
               >
                 {isSelected && (
                   <span className="duo-check-badge">
-                    <Check size={13} strokeWidth={3} />
+                    <Check size={12} strokeWidth={2.5} />
                   </span>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '28px', lineHeight: 1 }}>{c.flag}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '24px', lineHeight: 1 }}>{c.flag}</span>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--navy)' }}>{c.name}</h3>
-                    <small style={{ color: 'var(--teal)', fontWeight: '600' }}>{c.cities}</small>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--navy)', margin: 0 }}>{c.name}</h3>
+                    <small style={{ color: 'var(--teal)', fontWeight: '500' }}>{c.cities}</small>
                   </div>
                 </div>
                 <p style={{ fontSize: '11px', color: 'var(--muted)', margin: 0 }}>{c.highlights}</p>
@@ -428,16 +393,16 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         <ValidationMessage id="country-error">{errors.country}</ValidationMessage>
       </div>
 
-      {/* SECTION 2: Departure City (Duolingo-style Interactive Airport Cards) */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '700', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Plane size={16} style={{ color: 'var(--teal)' }} /> Where are you flying from?
+      {/* SECTION 2: Departure City (Minimalist Interactive Airport Cards) */}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Plane size={15} style={{ color: 'var(--teal)' }} /> Departure City
           </label>
           <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Select Indian departure airport</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
           {availableDepartures.map(d => {
             const isSelected = form.departure_airport === d.airport;
             return (
@@ -448,23 +413,23 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
                 onClick={() => update('departure_airport', d.airport)}
                 onKeyDown={e => e.key === 'Enter' && update('departure_airport', d.airport)}
                 className={`duo-card ${isSelected ? 'selected' : ''}`}
-                style={{ padding: '14px 16px' }}
+                style={{ padding: '12px 14px' }}
               >
                 {isSelected && (
                   <span className="duo-check-badge">
-                    <Check size={13} strokeWidth={3} />
+                    <Check size={12} strokeWidth={2.5} />
                   </span>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: '800', fontSize: '15px', color: 'var(--navy)' }}>{d.city}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                  <span style={{ fontWeight: '600', fontSize: '14px', color: 'var(--navy)' }}>{d.city}</span>
                   <span
                     style={{
-                      background: isSelected ? 'var(--teal)' : '#e2e8f0',
-                      color: isSelected ? '#ffffff' : '#475569',
-                      padding: '2px 7px',
-                      borderRadius: '6px',
-                      fontSize: '11px',
-                      fontWeight: '800',
+                      background: isSelected ? 'var(--teal)' : '#f1f5f9',
+                      color: isSelected ? '#ffffff' : '#64748b',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontWeight: '600',
                     }}
                   >
                     {d.code}
@@ -495,10 +460,10 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         <ValidationMessage id="departure_airport-error">{errors.departure_airport}</ValidationMessage>
       </div>
 
-      <div className="form-grid" style={{ marginBottom: '28px' }}>
+      <div className="form-grid" style={{ marginBottom: '24px' }}>
         {/* SECTION 3: Holiday Start Date with Quick Presets */}
         <div className="field">
-          <label htmlFor="start_date" style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <label htmlFor="start_date" style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Calendar size={15} style={{ color: 'var(--teal)' }} /> Holiday start date
           </label>
           <input
@@ -510,20 +475,20 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
             onChange={e => update('start_date', e.target.value)}
             aria-invalid={!!errors.start_date}
             aria-describedby={errors.start_date ? 'start_date-error' : undefined}
-            style={{ fontWeight: '600' }}
+            style={{ fontWeight: '500' }}
           />
           <small style={{ color: 'var(--muted)' }}>
             Arrival date in destination (1 to 17 April 2027)
           </small>
 
-          {/* Duolingo-style Quick Date Pills */}
+          {/* Quick Date Pills */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
             {QUICK_DATE_PRESETS.map(p => (
               <button
                 key={p.date}
                 type="button"
                 className={`duo-pill ${form.start_date === p.date ? 'selected' : ''}`}
-                style={{ fontSize: '11px', padding: '4px 9px' }}
+                style={{ fontSize: '11px', padding: '4px 8px' }}
                 onClick={() => update('start_date', p.date)}
               >
                 {p.label}
@@ -533,19 +498,19 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
           <ValidationMessage id="start_date-error">{errors.start_date}</ValidationMessage>
         </div>
 
-        {/* SECTION 4: Number of Nights with Interactive Segmented Buttons */}
+        {/* SECTION 4: Number of Nights with Minimalist Segmented Buttons */}
         <div className="field">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label htmlFor="nights" style={{ fontWeight: '700' }}>
+            <label htmlFor="nights" style={{ fontWeight: '600' }}>
               Number of nights
             </label>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--teal)' }}>
+            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--teal)' }}>
               {form.nights} Nights
             </span>
           </div>
 
-          {/* Interactive Chunky Number Grid */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBlock: '4px' }}>
+          {/* Interactive Minimalist Number Grid */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBlock: '4px' }}>
             {[3, 4, 5, 6, 7, 8, 9, 10].map(n => (
               <button
                 key={n}
@@ -565,21 +530,21 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         </div>
       </div>
 
-      <div className="form-grid" style={{ marginBottom: '28px' }}>
+      <div className="form-grid" style={{ marginBottom: '24px' }}>
         {/* SECTION 5: Adults Interactive Chips */}
         <div className="field">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label htmlFor="adults" style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label htmlFor="adults" style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Users size={15} style={{ color: 'var(--teal)' }} /> Adults
             </label>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--teal)' }}>
+            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--teal)' }}>
               {form.adults} Adult{form.adults > 1 ? 's' : ''}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '8px', marginBlock: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px', marginBlock: '4px' }}>
             {[
               { count: 1, label: '1 Solo' },
-              { count: 2, label: '2 Couple (Menon)' },
+              { count: 2, label: '2 Couple' },
               { count: 3, label: '3 Trio' },
               { count: 4, label: '4 Group' },
             ].map(a => (
@@ -587,7 +552,7 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
                 key={a.count}
                 type="button"
                 className={`duo-pill ${form.adults === a.count ? 'selected' : ''}`}
-                style={{ flex: 1, textAlign: 'center', justifyContent: 'center' }}
+                style={{ flex: 1, textAlign: 'center', justifyContent: 'center', padding: '6px 4px', fontSize: '12px' }}
                 onClick={() => update('adults', a.count)}
               >
                 {a.label}
@@ -608,10 +573,10 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         {/* SECTION 6: Children & Dynamic Interactive Age Bubbles */}
         <div className="field">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label htmlFor="children_ages" style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label htmlFor="children_ages" style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Smile size={15} style={{ color: 'var(--teal)' }} /> Children's ages
             </label>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--teal)' }}>
+            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--teal)' }}>
               {form.children_ages.length} Child{form.children_ages.length !== 1 ? 'ren' : ''}
             </span>
           </div>
@@ -626,7 +591,7 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
               update(
                 'children_ages',
                 n > form.children_ages.length
-                  ? [...form.children_ages, 6] // default child age 6 (Menon family standard)
+                  ? [...form.children_ages, 6]
                   : form.children_ages.slice(0, n)
               )
             }
@@ -634,30 +599,30 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
 
           {/* Interactive Child Age Selectors */}
           {form.children_ages.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
               {form.children_ages.map((age, i) => (
                 <div
                   key={i}
                   style={{
-                    padding: '10px 12px',
+                    padding: '8px 12px',
                     background: '#f8fafc',
                     border: '1px solid #e2e8f0',
-                    borderRadius: '10px',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--navy)' }}>
-                    Child {i + 1} Age: <strong style={{ color: 'var(--teal)' }}>{age} yrs</strong>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--navy)' }}>
+                    Child {i + 1}: <strong style={{ color: 'var(--teal)' }}>{age} yrs</strong>
                   </span>
-                  <div style={{ display: 'flex', gap: '5px' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
                     {[2, 4, 6, 8, 12, 16].map(quickAge => (
                       <button
                         key={quickAge}
                         type="button"
                         className={`duo-number-tile ${Number(age) === quickAge ? 'selected' : ''}`}
-                        style={{ width: '32px', height: '32px', fontSize: '11px' }}
+                        style={{ width: '30px', height: '30px', fontSize: '11px' }}
                         onClick={() =>
                           update(
                             'children_ages',
@@ -680,30 +645,31 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         </div>
       </div>
 
-      {/* SECTION 7: Total Budget with Quick Preset Tiers */}
-      <div className="budget-field" style={{ marginTop: '12px' }}>
+      {/* SECTION 7: Total Budget with Minimalist Presets */}
+      <div className="budget-field" style={{ marginTop: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <label htmlFor="budget" style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Coins size={16} style={{ color: 'var(--teal)' }} /> Total holiday budget (INR)
+          <label htmlFor="budget" style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Coins size={15} style={{ color: 'var(--teal)' }} /> Total holiday budget (INR)
           </label>
           {form.budget && (
-            <span style={{ fontWeight: '800', color: 'var(--teal)', fontSize: '14px' }}>
+            <span style={{ fontWeight: '700', color: 'var(--teal)', fontSize: '14px' }}>
               {money(form.budget)}
             </span>
           )}
         </div>
 
         {/* Quick Budget Preset Pills */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
           {QUICK_BUDGET_PRESETS.map(b => (
             <button
               key={b.amount}
               type="button"
               className={`duo-pill ${Number(form.budget) === b.amount ? 'selected' : ''}`}
+              style={{ fontSize: '12px', padding: '5px 10px' }}
               onClick={() => update('budget', String(b.amount))}
             >
               <strong>{b.label}</strong>
-              <small style={{ opacity: 0.85, fontSize: '10px' }}>({b.tag})</small>
+              <small style={{ opacity: 0.8, fontSize: '10px' }}>({b.tag})</small>
             </button>
           ))}
         </div>
@@ -721,7 +687,7 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
             }}
             aria-invalid={!!errors.budget}
             aria-describedby={errors.budget ? 'budget-error' : undefined}
-            style={{ fontWeight: '700', fontSize: '16px' }}
+            style={{ fontWeight: '600', fontSize: '15px' }}
           />
           <span>INR</span>
         </div>
@@ -732,14 +698,14 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
       </div>
 
       <div className="form-note">
-        <Info size={18} />
+        <Info size={16} />
         <span>Travel data covers 1–20 April 2027. Your cities and components are chosen automatically to fit your preferences.</span>
       </div>
 
-      {/* Duolingo Big Chunky Bouncy Submit Button */}
-      <div className="form-footer" style={{ borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
+      {/* Clean Minimalist Submit Section */}
+      <div className="form-footer" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '18px' }}>
         <div>
-          <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--navy)', display: 'block' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'block' }}>
             {form.budget ? `${money(form.budget)} total budget` : 'Configure your trip'}
           </span>
           <small style={{ color: 'var(--muted)' }}>One package. Every rule checked.</small>
@@ -747,17 +713,15 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         <button
           type="submit"
           disabled={unavailable || busy}
-          className="duo-pill selected"
+          className="btn"
           style={{
-            minHeight: '52px',
-            paddingInline: '28px',
-            fontSize: '15px',
-            fontWeight: '800',
-            letterSpacing: '0.02em',
-            boxShadow: '0 6px 16px rgba(8, 127, 140, 0.25)',
+            minHeight: '48px',
+            paddingInline: '24px',
+            fontSize: '14px',
+            fontWeight: '600',
           }}
         >
-          {busy ? 'Building Package…' : 'Generate My Holiday'} <ArrowRight size={18} />
+          {busy ? 'Building Package…' : 'Generate My Holiday'} <ArrowRight size={16} />
         </button>
       </div>
     </form>
@@ -766,17 +730,17 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
 
 function Counter({ id, value, min, max = Infinity, onChange, label }) {
   return (
-    <div className="counter" role="group" aria-label={label} style={{ height: '42px', border: '2px solid #e2e8f0' }}>
+    <div className="counter" role="group" aria-label={label} style={{ height: '40px', border: '1px solid #e2e8f0' }}>
       <button
         type="button"
         aria-label={`Fewer ${label}`}
         disabled={value <= min}
         onClick={() => onChange(value - 1)}
-        style={{ width: '32px', height: '32px' }}
+        style={{ width: '30px', height: '30px' }}
       >
-        <Minus size={15} />
+        <Minus size={14} />
       </button>
-      <output id={id} aria-live="polite" style={{ fontWeight: '700' }}>
+      <output id={id} aria-live="polite" style={{ fontWeight: '600' }}>
         {value} <small style={{ fontWeight: '400' }}>{label}</small>
       </output>
       <button
@@ -784,9 +748,9 @@ function Counter({ id, value, min, max = Infinity, onChange, label }) {
         aria-label={`More ${label}`}
         disabled={value >= max}
         onClick={() => onChange(value + 1)}
-        style={{ width: '32px', height: '32px' }}
+        style={{ width: '30px', height: '30px' }}
       >
-        <Plus size={15} />
+        <Plus size={14} />
       </button>
     </div>
   );
