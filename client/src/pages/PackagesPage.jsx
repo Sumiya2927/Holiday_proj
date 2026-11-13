@@ -160,6 +160,28 @@ function Results({ id }) {
               View Package Details <ArrowRight size={16} />
             </Link>
           </div>
+
+          {activePkg.pricing.budget < activePkg.pricing.total && (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                fontSize: '11px',
+                color: '#92400e',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Sparkles size={13} style={{ flexShrink: 0 }} />
+              <span>
+                Tip: In <strong>View Package Details</strong>, you can customize components or remove non-essential experiences to save money.
+              </span>
+            </div>
+          )}
         </div>
       </article>
 

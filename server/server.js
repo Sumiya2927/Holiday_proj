@@ -1,19 +1,37 @@
-const catalogRoutes = require("./routes/catalogRoutes");
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+require("dotenv").config(); // also check root if needed
 
 const connectDB = require("./config/db");
+const catalogRoutes = require("./routes/catalogRoutes");
+const packageRoutes = require("./routes/packageRoutes");
+const reservationRoutes = require("./routes/reservationRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// API Routes
 app.use("/api/catalog", catalogRoutes);
+app.use("/api/packages", packageRoutes);
+app.use("/api/reservations", reservationRoutes);
 
 app.get("/", (req, res) => {
   res.json({
-    message: "Build My Holiday Backend is running!"
+    name: "Build My Holiday API",
+    status: "running",
+    version: "1.0.0",
+    endpoints: [
+      "/api/catalog",
+      "/api/catalog/options",
+      "/api/packages/generate",
+      "/api/packages/:id",
+      "/api/packages/:id/confirm",
+      "/api/reservations/:reference"
+    ]
   });
 });
 
@@ -27,4 +45,8 @@ const startServer = async () => {
   });
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { app, startServer };

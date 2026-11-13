@@ -1,13 +1,13 @@
 // Client-side catalog preview engine & development fixture adapter.
 // Uses the provided hackathon JSON catalog to power end-to-end development and preview
 // when the backend service is offline.
-import catalog from '../../../data/catalog/destinations.json';
-import airports from '../../../data/catalog/airports.json';
-import flights from '../../../data/catalog/flights.json';
-import hotels from '../../../data/catalog/hotels.json';
-import rooms from '../../../data/catalog/rooms.json';
-import transfers from '../../../data/catalog/transfers.json';
-import attractions from '../../../data/catalog/attractions.json';
+import catalog from '../data/catalog/destinations.json';
+import airports from '../data/catalog/airports.json';
+import flights from '../data/catalog/flights.json';
+import hotels from '../data/catalog/hotels.json';
+import rooms from '../data/catalog/rooms.json';
+import transfers from '../data/catalog/transfers.json';
+import attractions from '../data/catalog/attractions.json';
 
 const STORAGE_KEY = 'holiday-package-preview-v2';
 
@@ -242,7 +242,7 @@ function assemblePackage(r, id, options = {}) {
       const fromC = cityPlan[c].city;
       const toC = cityPlan[c + 1].city;
       const intercityT = transfers.find(t => t.from_city === fromC && t.to_city === toC) || {
-        transfer_id: `TR-${fromC.slice(0,3).toUpperCase()}-${toC.slice(0,3).toUpperCase()}-EXP`,
+        transfer_id: `TR-${fromC.slice(0, 3).toUpperCase()}-${toC.slice(0, 3).toUpperCase()}-EXP`,
         name: `Express train from ${fromC} to ${toC}`,
         type: 'TRAIN',
         duration_minutes: 120,
@@ -332,10 +332,10 @@ function assemblePackage(r, id, options = {}) {
       title: d < r.start_date
         ? 'Your Journey Begins'
         : d === r.start_date
-        ? `Welcome to ${firstCity}`
-        : d === day(r.start_date, r.nights)
-        ? 'Homeward Bound'
-        : `Explore ${curCity}`,
+          ? `Welcome to ${firstCity}`
+          : d === day(r.start_date, r.nights)
+            ? 'Homeward Bound'
+            : `Explore ${curCity}`,
       events: [],
     };
   });
@@ -444,7 +444,7 @@ function loadState() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (stored && stored.packages) return stored;
-  } catch {}
+  } catch { }
 
   const sample = assemblePackage(sampleRequest, 'demo-sample');
   const booked = {
@@ -470,7 +470,7 @@ function loadState() {
 function saveState(s) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-  } catch {}
+  } catch { }
 }
 
 export const demoApi = {
@@ -596,14 +596,14 @@ export const demoApi = {
       const options =
         r.country === 'JP'
           ? [
-              { id: 'plan-1', plan: [{ city: 'Tokyo', nights: 4 }, { city: 'Kyoto', nights: 2 }], label: 'Tokyo (4 nights) + Kyoto (2 nights)' },
-              { id: 'plan-2', plan: [{ city: 'Tokyo', nights: 3 }, { city: 'Osaka', nights: 3 }], label: 'Tokyo (3 nights) + Osaka (3 nights)' },
-              { id: 'plan-3', plan: [{ city: 'Tokyo', nights: 6 }], label: 'Tokyo in-depth (6 nights)' },
-            ]
+            { id: 'plan-1', plan: [{ city: 'Tokyo', nights: 4 }, { city: 'Kyoto', nights: 2 }], label: 'Tokyo (4 nights) + Kyoto (2 nights)' },
+            { id: 'plan-2', plan: [{ city: 'Tokyo', nights: 3 }, { city: 'Osaka', nights: 3 }], label: 'Tokyo (3 nights) + Osaka (3 nights)' },
+            { id: 'plan-3', plan: [{ city: 'Tokyo', nights: 6 }], label: 'Tokyo in-depth (6 nights)' },
+          ]
           : [
-              { id: 'plan-1', plan: [{ city: 'Dubai', nights: 4 }, { city: 'Abu Dhabi', nights: 2 }], label: 'Dubai (4 nights) + Abu Dhabi (2 nights)' },
-              { id: 'plan-2', plan: [{ city: 'Dubai', nights: 6 }], label: 'Dubai in-depth (6 nights)' },
-            ];
+            { id: 'plan-1', plan: [{ city: 'Dubai', nights: 4 }, { city: 'Abu Dhabi', nights: 2 }], label: 'Dubai (4 nights) + Abu Dhabi (2 nights)' },
+            { id: 'plan-2', plan: [{ city: 'Dubai', nights: 6 }], label: 'Dubai in-depth (6 nights)' },
+          ];
       return { options };
     }
 
@@ -638,26 +638,46 @@ export const demoApi = {
       p.hotels = p.hotels.map(h => (h.city === change.city ? targetHotel : h));
       warnings.push(`Accommodation updated to ${targetHotel.name}. Check-in scheduled for 15:00.`);
     } else if (change.type === 'attraction') {
-      const attrId = change.selection.attraction_id;
-      if (change.action === 'remove') {
-        p.attractions = p.attractions.filter(a => a.attraction_id !== attrId);
-      } else {
-        if (p.attractions.some(a => a.attraction_id === attrId)) {
-          throw fail('This attraction is already part of your itinerary.', 'CONFLICT', 409);
+      if (change.action === 'replace_all' && Array.isArray(change.attraction_ids)) {
+        const newAttractions = [];
+        for (let i = 0; i < change.attraction_ids.length; i++) {
+          const id = change.attraction_ids[i];
+          const targetAttr = attractions.find(a => a.attraction_id === id);
+          if (!targetAttr) continue;
+          const tripDay = 1 + (i % Math.max(1, p.request.nights - 1));
+          const visitDate = day(p.request.start_date, tripDay);
+          const startTime = `${visitDate}T${targetAttr.open_from || '10:00'}:00`;
+          newAttractions.push({
+            ...targetAttr,
+            start_local: startTime,
+            end_local: shift(startTime, targetAttr.visit_minutes || 90),
+            total: perPerson(targetAttr, p.request, 'price_per_person'),
+          });
         }
-        const targetAttr = attractions.find(a => a.attraction_id === attrId);
-        if (!targetAttr) throw fail('Attraction not found.', 'NOT_FOUND', 404);
+        p.attractions = newAttractions;
+        warnings.push(`Itinerary attractions updated (${newAttractions.length} experience(s) selected).`);
+      } else {
+        const attrId = change.selection?.attraction_id;
+        if (change.action === 'remove') {
+          p.attractions = p.attractions.filter(a => a.attraction_id !== attrId);
+        } else {
+          if (p.attractions.some(a => a.attraction_id === attrId)) {
+            throw fail('This attraction is already part of your itinerary.', 'CONFLICT', 409);
+          }
+          const targetAttr = attractions.find(a => a.attraction_id === attrId);
+          if (!targetAttr) throw fail('Attraction not found.', 'NOT_FOUND', 404);
 
-        const tripDay = 1 + (p.attractions.length % Math.max(1, p.request.nights - 1));
-        const visitDate = day(p.request.start_date, tripDay);
-        const startTime = `${visitDate}T${targetAttr.open_from || '11:00'}:00`;
+          const tripDay = 1 + (p.attractions.length % Math.max(1, p.request.nights - 1));
+          const visitDate = day(p.request.start_date, tripDay);
+          const startTime = `${visitDate}T${targetAttr.open_from || '11:00'}:00`;
 
-        p.attractions.push({
-          ...targetAttr,
-          start_local: startTime,
-          end_local: shift(startTime, targetAttr.visit_minutes || 90),
-          total: perPerson(targetAttr, p.request, 'price_per_person'),
-        });
+          p.attractions.push({
+            ...targetAttr,
+            start_local: startTime,
+            end_local: shift(startTime, targetAttr.visit_minutes || 90),
+            total: perPerson(targetAttr, p.request, 'price_per_person'),
+          });
+        }
       }
     } else if (change.type === 'city_plan') {
       const updatedPkg = assemblePackage(p.request, id, { cityPlan: change.plan });
@@ -691,7 +711,8 @@ export const demoApi = {
     } while (s.bookings[reference]);
 
     p.status = 'BOOKED';
-    p.booking = { reference };
+    p.booking = { reference, bookedAt: new Date().toISOString() };
+    p.reference = reference;
 
     s.packages[id] = p;
     s.bookings[reference] = copy(p);

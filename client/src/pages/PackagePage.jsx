@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, CalendarDays, Users, AlertTriangle, Route } from 'lucide-react';
+import { api } from '../api/http';
 import usePackage from '../hooks/usePackage';
 import { LoadingSkeleton, ErrorState, Button, ExportButton } from '../components/UI';
 import CityRouteSummary from '../components/CityRouteSummary';
@@ -122,7 +123,27 @@ export default function PackagePage() {
   const [selection, setSelection] = useState(null);
   const [toast, setToast] = useState('');
   const [warnings, setWarnings] = useState([]);
+  const [trimmingExperiences, setTrimmingExperiences] = useState(false);
   const p = resource.data;
+
+  const handleTrimExperiences = async () => {
+    if (!p?.id || trimmingExperiences) return;
+    setTrimmingExperiences(true);
+    try {
+      const payload = {
+        type: 'attraction',
+        action: 'replace_all',
+        attraction_ids: [],
+      };
+      const updated = await api.modify(p.id, payload);
+      resource.setData(updated);
+      setToast('Optional experiences removed! Your package total and budget have refreshed.');
+    } catch (err) {
+      alert(err.message || 'Failed to update experiences');
+    } finally {
+      setTrimmingExperiences(false);
+    }
+  };
 
   return (
     <div className="container page">
@@ -190,7 +211,11 @@ export default function PackagePage() {
           <div className="package-layout">
             <PackageSections pkg={p} onEdit={p.status === 'BOOKED' ? undefined : setSelection} />
             <div className="sidebar">
-              <PriceBreakdown pricing={p.pricing}>
+              <PriceBreakdown
+                pricing={p.pricing}
+                onTrimExperiences={p.status === 'BOOKED' ? undefined : handleTrimExperiences}
+                trimming={trimmingExperiences}
+              >
                 {p.status === 'BOOKED' ? (
                   <Link className="btn full" to={`/booking/${p.booking.reference}`}>
                     View reservation

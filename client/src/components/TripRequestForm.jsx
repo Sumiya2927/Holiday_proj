@@ -13,6 +13,7 @@ import {
   Coins,
   Smile,
   Compass,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from './UI';
 import ValidationMessage from './ValidationMessage';
@@ -171,7 +172,11 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
       } catch {}
       return next;
     });
-    setErrors(old => ({ ...old, [key]: undefined }));
+    setErrors(old => {
+      const next = { ...old };
+      delete next[key];
+      return next;
+    });
   }
 
   function applyQuickRequest() {
@@ -335,128 +340,109 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         </div>
       </div>
 
-      {/* SECTION 1: Destination Country (Minimalist Interactive Cards) */}
+      {/* SECTION 1: Destination Country Dropdown */}
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <label
+            htmlFor="country"
+            style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
             <Compass size={15} style={{ color: 'var(--teal)' }} /> Destination Country
           </label>
           <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Select destination</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
+        <div className="dropdown-control-wrap">
+          <select
+            id="country"
+            value={form.country}
+            onChange={e => update('country', e.target.value)}
+            className="dropdown-select-box"
+            aria-invalid={!!errors.country}
+            aria-describedby={errors.country ? 'country-error' : undefined}
+          >
+            <option value="">Select destination country...</option>
+            {availableCountries.map(c => (
+              <option key={c.code} value={c.code}>
+                {c.flag ? `${c.flag} ` : ''}{c.name} — {c.cities}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={18} className="dropdown-chevron-icon" />
+        </div>
+
+        {/* Quick select pills */}
+        <div className="dropdown-quick-row">
           {availableCountries.map(c => {
             const isSelected = form.country === c.code;
             return (
-              <div
+              <button
                 key={c.code}
-                role="button"
-                tabIndex={0}
+                type="button"
+                className={`dropdown-quick-pill ${isSelected ? 'selected' : ''}`}
                 onClick={() => update('country', c.code)}
-                onKeyDown={e => e.key === 'Enter' && update('country', c.code)}
-                className={`duo-card ${isSelected ? 'selected' : ''}`}
               >
-                {isSelected && (
-                  <span className="duo-check-badge">
-                    <Check size={12} strokeWidth={2.5} />
-                  </span>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '24px', lineHeight: 1 }}>{c.flag}</span>
-                  <div>
-                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--navy)', margin: 0 }}>{c.name}</h3>
-                    <small style={{ color: 'var(--teal)', fontWeight: '500' }}>{c.cities}</small>
-                  </div>
-                </div>
-                <p style={{ fontSize: '11px', color: 'var(--muted)', margin: 0 }}>{c.highlights}</p>
-              </div>
+                <span>{c.flag}</span>
+                <span>{c.name}</span>
+                {isSelected && <Check size={12} strokeWidth={2.5} />}
+              </button>
             );
           })}
         </div>
 
-        {/* Accessible hidden select for standard form compliance & test fallback */}
-        <select
-          id="country"
-          value={form.country}
-          onChange={e => update('country', e.target.value)}
-          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0 }}
-          aria-invalid={!!errors.country}
-          aria-describedby={errors.country ? 'country-error' : undefined}
-        >
-          <option value="">Select country</option>
-          {availableCountries.map(c => (
-            <option key={c.code} value={c.code}>
-              {c.name}
-            </option>
-          ))}
-        </select>
         <ValidationMessage id="country-error">{errors.country}</ValidationMessage>
       </div>
 
-      {/* SECTION 2: Departure City (Minimalist Interactive Airport Cards) */}
+      {/* SECTION 2: Departure City Dropdown */}
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <label
+            htmlFor="departure_airport"
+            style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
             <Plane size={15} style={{ color: 'var(--teal)' }} /> Departure City
           </label>
           <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Select Indian departure airport</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+        <div className="dropdown-control-wrap">
+          <select
+            id="departure_airport"
+            value={form.departure_airport}
+            onChange={e => update('departure_airport', e.target.value)}
+            className="dropdown-select-box"
+            aria-invalid={!!errors.departure_airport}
+            aria-describedby={errors.departure_airport ? 'departure_airport-error' : undefined}
+          >
+            <option value="">Select departure airport...</option>
+            {availableDepartures.map(d => (
+              <option key={d.airport} value={d.airport}>
+                {d.city} ({d.code || d.airport}) — {d.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={18} className="dropdown-chevron-icon" />
+        </div>
+
+        {/* Quick select pills */}
+        <div className="dropdown-quick-row">
           {availableDepartures.map(d => {
             const isSelected = form.departure_airport === d.airport;
             return (
-              <div
+              <button
                 key={d.airport}
-                role="button"
-                tabIndex={0}
+                type="button"
+                className={`dropdown-quick-pill ${isSelected ? 'selected' : ''}`}
                 onClick={() => update('departure_airport', d.airport)}
-                onKeyDown={e => e.key === 'Enter' && update('departure_airport', d.airport)}
-                className={`duo-card ${isSelected ? 'selected' : ''}`}
-                style={{ padding: '12px 14px' }}
               >
-                {isSelected && (
-                  <span className="duo-check-badge">
-                    <Check size={12} strokeWidth={2.5} />
-                  </span>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                  <span style={{ fontWeight: '600', fontSize: '14px', color: 'var(--navy)' }}>{d.city}</span>
-                  <span
-                    style={{
-                      background: isSelected ? 'var(--teal)' : '#f1f5f9',
-                      color: isSelected ? '#ffffff' : '#64748b',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '10px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    {d.code}
-                  </span>
-                </div>
-                <small style={{ color: 'var(--muted)', fontSize: '10px' }}>{d.label}</small>
-              </div>
+                <span>{d.city}</span>
+                <span style={{ opacity: 0.8, fontSize: '10px' }}>({d.code || d.airport})</span>
+                {isSelected && <Check size={12} strokeWidth={2.5} />}
+              </button>
             );
           })}
         </div>
 
-        {/* Accessible hidden select for fallback and tests */}
-        <select
-          id="departure_airport"
-          value={form.departure_airport}
-          onChange={e => update('departure_airport', e.target.value)}
-          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0 }}
-          aria-invalid={!!errors.departure_airport}
-          aria-describedby={errors.departure_airport ? 'departure_airport-error' : undefined}
-        >
-          <option value="">Select departure</option>
-          {availableDepartures.map(d => (
-            <option key={d.airport} value={d.airport}>
-              {d.city} ({d.airport})
-            </option>
-          ))}
-        </select>
         <ValidationMessage id="departure_airport-error">{errors.departure_airport}</ValidationMessage>
       </div>
 
@@ -694,13 +680,14 @@ export default function TripRequestForm({ options, country, onSubmit, busy, unav
         <small style={{ color: 'var(--muted)' }}>
           All-inclusive budget for flights, stays, airport & intercity transfers, and attractions.
         </small>
+        {Number(form.budget) > 0 && Number(form.nights) >= 6 && Number(form.budget) < 260000 && form.country === 'JP' && (
+          <div style={{ marginTop: '6px', fontSize: '11px', color: '#b45309', background: '#fffbeb', padding: '6px 10px', borderRadius: '6px', border: '1px solid #fde68a' }}>
+            💡 <em>Tip: 6+ nights in Japan for multiple travellers typically starts from ~₹2.6L–₹2.8L. Consider 4–5 nights if you wish to stay strictly within a lower budget.</em>
+          </div>
+        )}
         <ValidationMessage id="budget-error">{errors.budget}</ValidationMessage>
       </div>
 
-      <div className="form-note">
-        <Info size={16} />
-        <span>Travel data covers 1–20 April 2027. Your cities and components are chosen automatically to fit your preferences.</span>
-      </div>
 
       {/* Clean Minimalist Submit Section */}
       <div className="form-footer" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '18px' }}>

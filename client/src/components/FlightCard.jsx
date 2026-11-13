@@ -1,4 +1,56 @@
 import { Plane, ArrowRight } from 'lucide-react';
 import { date, time, money, duration } from '../utils/format';
 import { Button } from './UI';
-export default function FlightCard({ flight, onChange }) { return <article className="card detail-card"><div className="card-heading"><span className="card-icon"><Plane size={20}/></span><div><h3>{flight.airline}</h3><p>{flight.flight_number} · {flight.leg === 'inbound' ? 'Arrival flight' : 'Return flight'}</p></div><strong className="card-price">{money(flight.total)}</strong></div><div className="flight-route"><div><strong>{time(flight.departure_local)}</strong><span>{flight.from}</span><small>{date(flight.departure_local)} · {flight.departure_timezone}</small></div><div className="flight-line"><small>{duration(flight.duration_minutes)}</small><span><i/><Plane size={16}/><i/></span><small>{flight.stops ? `${flight.stops} stop(s)` : 'Direct'}</small></div><div><strong>{time(flight.arrival_local)}</strong><span>{flight.to}</span><small>{date(flight.arrival_local)} · {flight.arrival_timezone}</small></div></div><div className="card-bottom"><span>{flight.passengers} passengers · {flight.cabin || 'Economy'}</span>{onChange && <Button secondary onClick={onChange}>Change Flight <ArrowRight size={14}/></Button>}</div></article>; }
+
+export default function FlightCard({ flight, onChange }) {
+  const perPersonCost = flight.price_per_seat?.amount || (flight.passengers ? Math.round(flight.total / flight.passengers) : null);
+
+  return (
+    <article className="card detail-card">
+      <div className="card-heading">
+        <span className="card-icon">
+          <Plane size={20} />
+        </span>
+        <div>
+          <h3>{flight.airline}</h3>
+          <p>{flight.flight_number} · {flight.leg === 'inbound' ? 'Arrival flight' : 'Return flight'}</p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <strong className="card-price">{money(flight.total)}</strong>
+          {perPersonCost && flight.passengers > 1 && (
+            <small style={{ display: 'block', color: 'var(--muted)', fontSize: '11px', fontWeight: '500', marginTop: '2px' }}>
+              {money(perPersonCost)} / person
+            </small>
+          )}
+        </div>
+      </div>
+
+      <div className="flight-route">
+        <div>
+          <strong>{time(flight.departure_local)}</strong>
+          <span>{flight.from}</span>
+          <small>{date(flight.departure_local)} · {flight.departure_timezone}</small>
+        </div>
+        <div className="flight-line">
+          <small>{duration(flight.duration_minutes)}</small>
+          <span><i /><Plane size={16} /><i /></span>
+          <small>{flight.stops ? `${flight.stops} stop(s)` : 'Direct'}</small>
+        </div>
+        <div>
+          <strong>{time(flight.arrival_local)}</strong>
+          <span>{flight.to}</span>
+          <small>{date(flight.arrival_local)} · {flight.arrival_timezone}</small>
+        </div>
+      </div>
+
+      <div className="card-bottom">
+        <span>{flight.passengers} passengers · {flight.cabin || 'Economy'}</span>
+        {onChange && (
+          <Button secondary onClick={onChange}>
+            Change Flight <ArrowRight size={14} />
+          </Button>
+        )}
+      </div>
+    </article>
+  );
+}
