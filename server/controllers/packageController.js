@@ -231,18 +231,87 @@ const confirmPackage = async (req, res) => {
   }
 };
 
-// Export package JSON
+// Export package JSON adhering to DATA_DICTIONARY section 4 shared trip format
 const exportPackage = async (req, res) => {
   try {
     const db = mongoose.connection.db;
     const { id } = req.params;
-    const pkg = await db.collection('packages').findOne({ id });
+    let pkg = await db.collection('packages').findOne({ id });
+    if (!pkg) {
+      pkg = await db.collection('packages').findOne({ 'booking.reference': id });
+    }
+    if (!pkg) {
+      const reservation = await db.collection('reservations').findOne({ reference: id });
+      pkg = reservation?.package;
+    }
     if (!pkg) {
       return res.status(404).json({ success: false, error: { message: 'Package not found' } });
     }
+
+    // Clean payload adhering to Section 4 trip format
+    // Strips internal MongoDB metadata (_id, __v, packages array) and ensures required fields
+    const exportPayload = {
+      country: pkg.country,
+      status: pkg.status || 'DRAFT',
+      booking: pkg.booking ? {
+        reference: String(pkg.booking.reference),
+        bookedAt: pkg.booking.bookedAt
+      } : null,
+      request: {
+        departure_airport: pkg.request?.departure_airport,
+        country: pkg.request?.country || pkg.country,
+        start_date: pkg.request?.start_date,
+        nights: Number(pkg.request?.nights),
+        adults: Number(pkg.request?.adults),
+        children_ages: pkg.request?.children_ages || [],
+        budget: Number(pkg.request?.budget)
+      },
+      return_date: pkg.return_date,
+      city_plan: pkg.city_plan?.map(c => ({
+        city: c.city,
+        nights: Number(c.nights)
+      })),
+      pricing: {
+        flights: pkg.pricing?.flights,
+        hotels: pkg.pricing?.hotels,
+        transfers: pkg.pricing?.transfers,
+        attractions: pkg.pricing?.attractions,
+        total: pkg.pricing?.total,
+        budget: pkg.pricing?.budget
+      },
+      flights: (pkg.flights || []).map(f => {
+        const { _id, ...rest } = f;
+        return rest;
+      }),
+      hotels: (pkg.hotels || []).map(h => {
+        const { _id, ...rest } = h;
+        return {
+          ...rest,
+          room_id: h.room_id // Guaranteed room_id for section 4 compliance
+        };
+      }),
+      transfers: (pkg.transfers || []).map(t => {
+        const { _id, ...rest } = t;
+        return rest;
+      }),
+      attractions: (pkg.attractions || []).map(a => {
+        const { _id, ...rest } = a;
+        return rest;
+      }),
+      itinerary: (pkg.itinerary || []).map(day => ({
+        date: day.date,
+        city: day.city,
+        title: day.title,
+        events: (day.events || []).map(ev => {
+          const { _id, ...rest } = ev;
+          return rest;
+        })
+      }))
+    };
+
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="holiday-${id}.json"`);
-    res.send(JSON.stringify(pkg, null, 2));
+    res.setHeader('Content-Disposition', `attachment; filename="holiday-${pkg.booking?.reference || id}.json"`);
+    res.send(JSON.stringify(exportPayload, null, 2));
   } catch (error) {
     res.status(500).json({ success: false, error: { message: error.message } });
   }
